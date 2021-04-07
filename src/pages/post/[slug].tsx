@@ -1,5 +1,7 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
 import { useRouter } from 'next/router'
+import Link from 'next/link';
+
 import Header from '../../components/Header';
 
 import Prismic from '@prismicio/client';
@@ -35,9 +37,11 @@ interface Post {
 
 interface PostProps {
   post: Post;
+  prevPost: Post | null;
+  nextPost: Post | null;
 }
 
-export default function Post({ post }: PostProps) {
+export default function Post({ post, prevPost, nextPost }: PostProps) {
   const router = useRouter();
   if (router.isFallback) {
     return (
@@ -100,6 +104,29 @@ export default function Post({ post }: PostProps) {
               })}
             </div>
           </article>
+
+          <div className={styles.postsNavigation}>
+              {prevPost && 
+                <div className={styles.postsNavigationLeft}>
+                  <Link href={`/post/${prevPost.uid}`}>
+                    <a >
+                      <p>{prevPost.data.title}</p>
+                      <p>Post anterior</p>
+                    </a>
+                  </Link>
+                </div>
+              }
+              {nextPost && 
+                <div className={styles.postsNavigationRight}>
+                  <Link href={`/post/${nextPost.uid}`}>
+                    <a >
+                      <p>{nextPost.data.title}</p>
+                      <p>Próximo post</p>
+                    </a>
+                  </Link>
+                </div>   
+              }
+          </div>
       </main>
     </>
   )
@@ -136,6 +163,19 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 
   const prismic = getPrismicClient();
   const response = await prismic.getByUID('posts', String(slug), {});
+  
+  const nextPost = (await prismic.query([
+    Prismic.predicates.at('document.type', 'posts')
+    ],  {
+      after: response.id,
+      orderings : '[document.first_publication_date]' 
+    })).results[0] ?? null;
+  const prevPost = (await prismic.query([
+    Prismic.predicates.at('document.type', 'posts')
+    ],  {
+      after: response.id,
+      orderings : '[document.first_publication_date desc]' 
+    })).results[0] ?? null;
 
   const post: Post = {
     uid: response.uid,
@@ -153,6 +193,6 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   }
 
   return {
-    props: { post }
+    props: { post, prevPost, nextPost }
   }
 };
