@@ -13,10 +13,10 @@ import { FiCalendar, FiUser, FiClock } from 'react-icons/fi';
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 
-
 interface Post {
   uid: string,
   first_publication_date: string | null;
+  last_publication_date: string | null;
   data: {
     title: string;
     subtitle: string;
@@ -59,23 +59,35 @@ export default function Post({ post }: PostProps) {
     <>
       <Header />
       <main className={styles.container}>
-          <img src={post.data.banner.url} className={styles.banner} alt="banner"/>
+          <div className={styles.banner}>
+            <img src={post.data.banner.url} alt="banner"/>
+          </div>
+
           <article className={styles.post}>
             <h1>{post.data.title}</h1>
-            <div className={styles.postInfo}>
-                <div>
+            
+            <div className={styles.container}>
+              <div className={styles.contentPublication}>
+                <div className={styles.contentPublication__datePublished}>
                   <FiCalendar />
                   <time>{format(new Date(post.first_publication_date), "dd MMM yyyy", { locale: ptBR })}</time>
                 </div>
-                <div>
+                <div className={styles.contentPublication__author}>
                   <FiUser />
                   <p>{post.data.author}</p>
                 </div>
-                <div>
+                <div className={styles.contentPublication__readTime}>
                   <FiClock />
                   <p>{readTime} min</p>
                 </div>
               </div>
+              {post.last_publication_date && 
+                <div className={styles.contentPublication__update}>
+                  * editado em {format(new Date(post.last_publication_date), "dd MMM yyyy", { locale: ptBR })}, 
+                    às {format(new Date(post.last_publication_date), "HH':'mm", { locale: ptBR })}
+                </div>
+              }
+            </div>
 
             <div className={styles.postContent}>
               {post.data.content.map((content) => {
@@ -124,10 +136,11 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 
   const prismic = getPrismicClient();
   const response = await prismic.getByUID('posts', String(slug), {});
-  
-  const post = {
+
+  const post: Post = {
     uid: response.uid,
     first_publication_date: response.first_publication_date,
+    last_publication_date: (response.last_publication_date && (response.first_publication_date === response.last_publication_date ? null : response.last_publication_date)),
     data: {
       title: response.data.title,
       subtitle: response.data.subtitle,

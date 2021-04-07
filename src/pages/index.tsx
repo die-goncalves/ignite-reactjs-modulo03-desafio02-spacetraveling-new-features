@@ -74,13 +74,17 @@ export default function Home({ postsPagination }: HomeProps) {
               <p>{post.data.subtitle}</p>
 
               <footer>
-                <div>
-                  <FiCalendar />
-                  <p>{format(new Date(post.first_publication_date), "dd MMM yyyy", { locale: ptBR })}</p>
-                </div>
-                <div>
-                  <FiUser />
-                  <p>{post.data.author}</p>
+                <div className={styles.container}>
+                  <div className={styles.contentPublication}>
+                    <div className={styles.contentPublication__datePublished}>
+                      <FiCalendar />
+                      <time>{format(new Date(post.first_publication_date), "dd MMM yyyy", { locale: ptBR })}</time>
+                    </div>
+                    <div className={styles.contentPublication__author}>
+                      <FiUser />
+                      <p>{post.data.author}</p>
+                    </div>
+                  </div>
                 </div>
               </footer>
             </article>
