@@ -15,6 +15,7 @@ import { FiCalendar, FiUser, FiClock } from 'react-icons/fi';
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 import Comments from '../../components/Comments';
+import PreviewButton from '../../components/PreviewButton';
 
 interface Post {
   uid: string,
@@ -37,12 +38,13 @@ interface Post {
 }
 
 interface PostProps {
+  preview: boolean;
   post: Post;
   prevPost: Post | null;
   nextPost: Post | null;
 }
 
-export default function Post({ post, prevPost, nextPost }: PostProps) {
+export default function Post({ preview, post, prevPost, nextPost }: PostProps) {
   const router = useRouter();
   if (router.isFallback) {
     return (
@@ -63,73 +65,80 @@ export default function Post({ post, prevPost, nextPost }: PostProps) {
   return (
     <>
       <Header />
-      <main className={styles.container}>
+      <main>
         <div className={styles.banner}>
           <img src={post.data.banner.url} alt="banner"/>
         </div>
 
-        <article className={styles.post}>
-          <h1>{post.data.title}</h1>
-          
-          <div className={styles.container}>
-            <div className={styles.contentPublication}>
-              <div className={styles.contentPublication__datePublished}>
-                <FiCalendar />
-                <time>{format(new Date(post.first_publication_date), "dd MMM yyyy", { locale: ptBR })}</time>
-              </div>
-              <div className={styles.contentPublication__author}>
-                <FiUser />
-                <p>{post.data.author}</p>
-              </div>
-              <div className={styles.contentPublication__readTime}>
-                <FiClock />
-                <p>{readTime} min</p>
-              </div>
-            </div>
-            {post.last_publication_date && 
-              <div className={styles.contentPublication__update}>
-                * editado em {format(new Date(post.last_publication_date), "dd MMM yyyy", { locale: ptBR })}, 
-                  às {format(new Date(post.last_publication_date), "HH':'mm", { locale: ptBR })}
-              </div>
-            }
-          </div>
-
-          <div className={styles.postContent}>
-            {post.data.content.map((content) => {
-              return (
-                <div key={content.heading} className={styles.singleContent}>
-                  <h2>{content.heading}</h2>
-                  <div className={styles.htmlContent} dangerouslySetInnerHTML={{ __html: RichText.asHtml(content.body) }}></div>
+        <div className={styles.contentRelatedPost}>
+          <article className={styles.post}>
+            <h1>{post.data.title}</h1>
+            
+            <div className={styles.containerPublication}>
+              <div className={styles.contentPublication}>
+                <div className={styles.contentPublication__datePublished}>
+                  <FiCalendar />
+                  <time>{format(new Date(post.first_publication_date), "dd MMM yyyy", { locale: ptBR })}</time>
                 </div>
-              )
-            })}
-          </div>
-        </article>
-
-        <div className={styles.postsNavigation}>
-            {prevPost && 
-              <div className={styles.postsNavigationLeft}>
-                <Link href={`/post/${prevPost.uid}`}>
-                  <a >
-                    <p>{prevPost.data.title}</p>
-                    <p>Post anterior</p>
-                  </a>
-                </Link>
+                <div className={styles.contentPublication__author}>
+                  <FiUser />
+                  <p>{post.data.author}</p>
+                </div>
+                <div className={styles.contentPublication__readTime}>
+                  <FiClock />
+                  <p>{readTime} min</p>
+                </div>
               </div>
-            }
-            {nextPost && 
-              <div className={styles.postsNavigationRight}>
-                <Link href={`/post/${nextPost.uid}`}>
-                  <a >
-                    <p>{nextPost.data.title}</p>
-                    <p>Próximo post</p>
-                  </a>
-                </Link>
-              </div>   
-            }
+              {post.last_publication_date && 
+                <div className={styles.contentPublication__update}>
+                  * editado em {format(new Date(post.last_publication_date), "dd MMM yyyy", { locale: ptBR })}, 
+                    às {format(new Date(post.last_publication_date), "HH':'mm", { locale: ptBR })}
+                </div>
+              }
+            </div>
+
+            <div className={styles.postContent}>
+              {post.data.content.map((content) => {
+                return (
+                  <div key={content.heading} className={styles.singleContent}>
+                    <h2>{content.heading}</h2>
+                    <div className={styles.htmlContent} dangerouslySetInnerHTML={{ __html: RichText.asHtml(content.body) }}></div>
+                  </div>
+                )
+              })}
+            </div>
+          </article>
+
+          <div className={styles.postsNavigation}>
+              {prevPost && 
+                <div className={styles.postsNavigationLeft}>
+                  <Link href={`/post/${prevPost.uid}`}>
+                    <a >
+                      <p>{prevPost.data.title}</p>
+                      <p>Post anterior</p>
+                    </a>
+                  </Link>
+                </div>
+              }
+              {nextPost && 
+                <div className={styles.postsNavigationRight}>
+                  <Link href={`/post/${nextPost.uid}`}>
+                    <a >
+                      <p>{nextPost.data.title}</p>
+                      <p>Próximo post</p>
+                    </a>
+                  </Link>
+                </div>   
+              }
+          </div>
+      
+          <Comments />
+          {preview &&
+            <div className={styles.previewButton}>
+              <PreviewButton />
+            </div>
+          }
         </div>
-    
-        <Comments />
       </main>
     </>
   )
@@ -161,12 +170,14 @@ export const getStaticPaths: GetStaticPaths = async () => {
   }
 }
 
-export const getStaticProps: GetStaticProps = async ({ params }) => {
+export const getStaticProps: GetStaticProps = async ({ params, preview = null, previewData = {} }) => {
   const { slug } = params;
+  const { ref } = previewData;
 
   const prismic = getPrismicClient();
-  const response = await prismic.getByUID('posts', String(slug), {});
-  
+  const response = await prismic.getByUID('posts', String(slug), ref ? { ref } : null);
+  // const post = await Client().getByUID("post", params.uid, ref ? { ref } : null) || {}
+
   const nextPost = (await prismic.query([
     Prismic.predicates.at('document.type', 'posts')
     ],  {
@@ -196,6 +207,6 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   }
 
   return {
-    props: { post, prevPost, nextPost }
+    props: { preview, post, prevPost, nextPost }
   }
 };

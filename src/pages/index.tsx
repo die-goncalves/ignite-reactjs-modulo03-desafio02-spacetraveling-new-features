@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
 
 import Header from '../components/Header';
+import PreviewButton from '../components/PreviewButton';
 
 import { FiCalendar, FiUser } from 'react-icons/fi';
 
@@ -30,12 +31,12 @@ interface PostPagination {
 }
 
 interface HomeProps {
+  preview: boolean;
   postsPagination: PostPagination;
 }
 
-export default function Home({ postsPagination }: HomeProps) {
+export default function Home({ preview, postsPagination }: HomeProps) {
   const [joinPosts, setJoinPosts] = useState<PostPagination>(postsPagination);
-
   function handleNextPage(){
     fetch(joinPosts.next_page)
           .then(response => response.json())
@@ -71,42 +72,51 @@ export default function Home({ postsPagination }: HomeProps) {
                   </Link>
                 </header>
               
-              <p>{post.data.subtitle}</p>
+                <p>{post.data.subtitle}</p>
 
-              <footer>
-                <div className={styles.container}>
-                  <div className={styles.contentPublication}>
-                    <div className={styles.contentPublication__datePublished}>
-                      <FiCalendar />
-                      <time>{format(new Date(post.first_publication_date), "dd MMM yyyy", { locale: ptBR })}</time>
-                    </div>
-                    <div className={styles.contentPublication__author}>
-                      <FiUser />
-                      <p>{post.data.author}</p>
+                <footer>
+                  <div className={styles.container}>
+                    <div className={styles.contentPublication}>
+                      <div className={styles.contentPublication__datePublished}>
+                        <FiCalendar />
+                        <time>{format(new Date(post.first_publication_date), "dd MMM yyyy", { locale: ptBR })}</time>
+                      </div>
+                      <div className={styles.contentPublication__author}>
+                        <FiUser />
+                        <p>{post.data.author}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </footer>
+                </footer>
             </article>
             ))}
           </section>
 
           {joinPosts.next_page && <button onClick={handleNextPage}>Carregar mais posts</button>}
+
+          {preview &&
+            <div className={styles.previewButton}>
+              <PreviewButton />
+            </div>
+          }
         </div>      
       </div>
     </>
   )
 }
 
-export const getStaticProps: GetStaticProps = async () => {
+export const getStaticProps: GetStaticProps = async ({ preview = null, previewData = {} }) => {
+  const { ref } = previewData;
+
   const prismic = getPrismicClient();
   const postsResponse = await prismic.query([
     Prismic.predicates.at('document.type', 'posts')
   ], {
       fetch: ['posts.title', 'posts.subtitle', 'posts.author'],
       pageSize: 1,
+      ref: ref ? ref : null
   })
-
+  
   const posts = postsResponse.results.map((post) => {
     return {
       uid: post.uid,
@@ -125,6 +135,6 @@ export const getStaticProps: GetStaticProps = async () => {
   }
   
   return {
-      props: { postsPagination }
+      props: { preview, postsPagination }
   };
 };
