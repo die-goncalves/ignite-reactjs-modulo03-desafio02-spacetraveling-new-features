@@ -1,19 +1,94 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react"
 
-export default function Comments(){
+type MappingType =
+  | 'pathname'
+  | 'url'
+  | 'title'
+  | 'og:title'
+  | 'issue-number'
+  | 'issue-term'
+
+type Theme =
+  | 'github-light'
+  | 'github-dark'
+  | 'preferred-color-scheme'
+  | 'github-dark-orange'
+  | 'icy-dark'
+  | 'dark-blue'
+  | 'photon-dark'
+
+interface ReactUtterancesProps {
+  repo: string
+  issueMap: MappingType
+  issueTerm?: string
+  issueNumber?: number
+  label?: string
+  theme: Theme
+}
+
+export default function ReactUtterances( props: ReactUtterancesProps){
+  const [pending, setPending] = useState<boolean>(true);
+  const utteranceBox = React.createRef<HTMLDivElement>();
+
+  if (props.issueMap === 'issue-term' && props.issueTerm === undefined) {
+    throw Error(
+      "Property 'issueTerm' must be provided with issueMap 'issue-term'"
+    )
+  }
+  if (props.issueMap === 'issue-term' && props.issueTerm === undefined) {
+    throw Error(
+      "Property 'issueTerm' must be provided with issueMap 'issue-term'"
+    )
+  }
+  if (props.issueMap === 'issue-number' && props.issueNumber === undefined) {
+    throw Error(
+      "Property 'issueNumber' must be provided with issueMap 'issue-number'"
+    )
+  }
+  
   useEffect(() => {
-    let script = document.createElement("script");
-    let anchor = document.getElementById("inject-comments-for-uterances");
-    script.setAttribute("src", "https://utteranc.es/client.js");
-    script.setAttribute("repo", "die-goncalves/ignite-reactjs-modulo03-desafio02-spacetraveling-new-features");
-    script.setAttribute("issue-term", "pathname");
-    script.setAttribute("theme", "dark-blue");
-    script.setAttribute("crossorigin","anonymous");
-    script.async = true;
-    anchor.appendChild(script);
-  }, []);
+    const { repo, issueMap, issueTerm, issueNumber, label, theme } = props;
+    const scriptElement = document.createElement('script');
+    scriptElement.src = 'https://utteranc.es/client.js';
+    scriptElement.async = true;
+    scriptElement.defer = true;
+    scriptElement.setAttribute('repo', repo);
+    scriptElement.setAttribute('crossorigin', 'anonymous');
+    scriptElement.setAttribute('theme', theme);
+    scriptElement.onload = () => setPending(false);
 
+    if (label) {
+      scriptElement.setAttribute('label', label);
+    }
+
+    if (issueMap === 'issue-number') {
+      scriptElement.setAttribute('issue-number', issueNumber.toString());
+    } else if (issueMap === 'issue-term') {
+      scriptElement.setAttribute('issue-term', issueTerm);
+    } else {
+      scriptElement.setAttribute('issue-term', issueMap);
+    }
+
+    if (utteranceBox && utteranceBox.current) {
+      utteranceBox.current.appendChild(scriptElement)
+    } else {
+      throw Error(
+        `Failed to add utterances comments on: ${utteranceBox}`
+      )
+    }
+
+    const removeScript = () => {
+      scriptElement.remove();
+      document.querySelectorAll(".utterances").forEach(el => el.remove());
+    };
+    return () => {
+      removeScript();
+    };
+  }, [props])
+  
   return (
-    <div id="inject-comments-for-uterances"></div>
-  );
+    <div ref={utteranceBox}>
+      {pending && <p>Loading Comments...</p>}
+    </div>
+  )
 }

@@ -3,6 +3,8 @@ import { useRouter } from 'next/router'
 import Link from 'next/link';
 
 import Header from '../../components/Header';
+import PreviewButton from '../../components/PreviewButton';
+import ReactUtterances from '../../components/Comments';
 
 import Prismic from '@prismicio/client';
 import { RichText } from 'prismic-dom';
@@ -14,8 +16,6 @@ import { FiCalendar, FiUser, FiClock } from 'react-icons/fi';
 
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
-import Comments from '../../components/Comments';
-import PreviewButton from '../../components/PreviewButton';
 
 interface Post {
   uid: string,
@@ -132,7 +132,14 @@ export default function Post({ preview, post, prevPost, nextPost }: PostProps) {
               }
           </div>
       
-          <Comments />
+          <ReactUtterances
+            repo='die-goncalves/ignite-reactjs-modulo03-desafio02-spacetraveling-new-features'
+            issueMap='issue-term'
+            issueTerm='pathname'
+            theme='dark-blue'
+            label='Comments'
+          />
+
           {preview &&
             <div className={styles.previewButton}>
               <PreviewButton />
@@ -176,7 +183,6 @@ export const getStaticProps: GetStaticProps = async ({ params, preview = null, p
 
   const prismic = getPrismicClient();
   const response = await prismic.getByUID('posts', String(slug), ref ? { ref } : null);
-  // const post = await Client().getByUID("post", params.uid, ref ? { ref } : null) || {}
 
   const nextPost = (await prismic.query([
     Prismic.predicates.at('document.type', 'posts')
