@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { GetStaticProps } from 'next';
+import Head from 'next/head';
 import { useState } from 'react';
 
 import Prismic from '@prismicio/client';
@@ -37,27 +38,30 @@ interface HomeProps {
 
 export default function Home({ preview, postsPagination }: HomeProps) {
   const [joinPosts, setJoinPosts] = useState<PostPagination>(postsPagination);
-  function handleNextPage(){
+  function handleNextPage() {
     fetch(joinPosts.next_page)
-          .then(response => response.json())
-          .then(data => setJoinPosts({
-            next_page: data.next_page,
-            results: [...joinPosts.results, ...data.results.map((post) => {
-              return {
-                uid: post.uid,
-                first_publication_date: post.first_publication_date,
-                data: {
-                  title: post.data.title,
-                  subtitle: post.data.subtitle,
-                  author: post.data.author,
-                }
-              }
-            })]
-          }));
+      .then(response => response.json())
+      .then(data => setJoinPosts({
+        next_page: data.next_page,
+        results: [...joinPosts.results, ...data.results.map((post) => {
+          return {
+            uid: post.uid,
+            first_publication_date: post.first_publication_date,
+            data: {
+              title: post.data.title,
+              subtitle: post.data.subtitle,
+              author: post.data.author,
+            }
+          }
+        })]
+      }));
   }
 
   return (
     <>
+      <Head>
+        <title>Home | spacetraveling</title>
+      </Head>
       <Header />
       <div className={styles.homeContainer}>
         <div className={styles.homeContent}>
@@ -71,7 +75,7 @@ export default function Home({ preview, postsPagination }: HomeProps) {
                     </a>
                   </Link>
                 </header>
-              
+
                 <p>{post.data.subtitle}</p>
 
                 <footer>
@@ -88,7 +92,7 @@ export default function Home({ preview, postsPagination }: HomeProps) {
                     </div>
                   </div>
                 </footer>
-            </article>
+              </article>
             ))}
           </section>
 
@@ -99,7 +103,7 @@ export default function Home({ preview, postsPagination }: HomeProps) {
               <PreviewButton />
             </div>
           }
-        </div>      
+        </div>
       </div>
     </>
   )
@@ -112,11 +116,11 @@ export const getStaticProps: GetStaticProps = async ({ preview = null, previewDa
   const postsResponse = await prismic.query([
     Prismic.predicates.at('document.type', 'posts')
   ], {
-      fetch: ['posts.title', 'posts.subtitle', 'posts.author'],
-      pageSize: 1,
-      ref: ref ? ref : null
+    fetch: ['posts.title', 'posts.subtitle', 'posts.author'],
+    pageSize: 1,
+    ref: ref ? ref : null
   })
-  
+
   const posts = postsResponse.results.map((post) => {
     return {
       uid: post.uid,
@@ -128,13 +132,13 @@ export const getStaticProps: GetStaticProps = async ({ preview = null, previewDa
       }
     }
   })
-  
+
   const postsPagination: PostPagination = {
     next_page: postsResponse.next_page,
     results: posts
   }
-  
+
   return {
-      props: { preview, postsPagination }
+    props: { preview, postsPagination }
   };
 };

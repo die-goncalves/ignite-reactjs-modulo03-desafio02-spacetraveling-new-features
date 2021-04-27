@@ -1,4 +1,5 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
+import Head from 'next/head';
 import { useRouter } from 'next/router'
 import Link from 'next/link';
 
@@ -49,7 +50,7 @@ export default function Post({ preview, post, prevPost, nextPost }: PostProps) {
   if (router.isFallback) {
     return (
       <>
-        <Header /> 
+        <Header />
         <div>Carregando...</div>
       </>
     )
@@ -60,20 +61,24 @@ export default function Post({ preview, post, prevPost, nextPost }: PostProps) {
     acc += numberWordsEachContent;
     return acc;
   }, 0);
-  const readTime = Math.ceil(totalWords/200);
-  
+  const readTime = Math.ceil(totalWords / 200);
+
   return (
     <>
+      <Head>
+        <title>{post.data.title} | spacetraveling</title>
+      </Head>
+
       <Header />
       <main>
         <div className={styles.banner}>
-          <img src={post.data.banner.url} alt="banner"/>
+          <img src={post.data.banner.url} alt="banner" />
         </div>
 
         <div className={styles.contentRelatedPost}>
           <article className={styles.post}>
             <h1>{post.data.title}</h1>
-            
+
             <div className={styles.containerPublication}>
               <div className={styles.contentPublication}>
                 <div className={styles.contentPublication__datePublished}>
@@ -89,9 +94,9 @@ export default function Post({ preview, post, prevPost, nextPost }: PostProps) {
                   <p>{readTime} min</p>
                 </div>
               </div>
-              {post.last_publication_date && 
+              {post.last_publication_date &&
                 <div className={styles.contentPublication__update}>
-                  * editado em {format(new Date(post.last_publication_date), "dd MMM yyyy", { locale: ptBR })}, 
+                  * editado em {format(new Date(post.last_publication_date), "dd MMM yyyy", { locale: ptBR })},
                     às {format(new Date(post.last_publication_date), "HH':'mm", { locale: ptBR })}
                 </div>
               }
@@ -110,28 +115,28 @@ export default function Post({ preview, post, prevPost, nextPost }: PostProps) {
           </article>
 
           <div className={styles.postsNavigation}>
-              {prevPost && 
-                <div className={styles.postsNavigationLeft}>
-                  <Link href={`/post/${prevPost.uid}`}>
-                    <a >
-                      <p>{prevPost.data.title}</p>
-                      <p>Post anterior</p>
-                    </a>
-                  </Link>
-                </div>
-              }
-              {nextPost && 
-                <div className={styles.postsNavigationRight}>
-                  <Link href={`/post/${nextPost.uid}`}>
-                    <a >
-                      <p>{nextPost.data.title}</p>
-                      <p>Próximo post</p>
-                    </a>
-                  </Link>
-                </div>   
-              }
+            {prevPost &&
+              <div className={styles.postsNavigationLeft}>
+                <Link href={`/post/${prevPost.uid}`}>
+                  <a >
+                    <p>{prevPost.data.title}</p>
+                    <p>Post anterior</p>
+                  </a>
+                </Link>
+              </div>
+            }
+            {nextPost &&
+              <div className={styles.postsNavigationRight}>
+                <Link href={`/post/${nextPost.uid}`}>
+                  <a >
+                    <p>{nextPost.data.title}</p>
+                    <p>Próximo post</p>
+                  </a>
+                </Link>
+              </div>
+            }
           </div>
-      
+
           <ReactUtterances
             repo='die-goncalves/ignite-reactjs-modulo03-desafio02-spacetraveling-new-features'
             issueMap='issue-term'
@@ -150,14 +155,14 @@ export default function Post({ preview, post, prevPost, nextPost }: PostProps) {
     </>
   )
 }
-                
+
 export const getStaticPaths: GetStaticPaths = async () => {
   const prismic = getPrismicClient();
-  
+
   const posts = await prismic.query([
     Prismic.predicates.at('document.type', 'posts')
   ], {
-      pageSize: 1,
+    pageSize: 1,
   })
 
   const postsUid = posts.results.map((post) => {
@@ -167,13 +172,13 @@ export const getStaticPaths: GetStaticPaths = async () => {
   })
   const paths = postsUid.map((post) => {
     return (
-      { params: { slug : post.uid } }
+      { params: { slug: post.uid } }
     )
   })
-  
+
   return {
-      paths,
-      fallback: true
+    paths,
+    fallback: true
   }
 }
 
@@ -186,16 +191,16 @@ export const getStaticProps: GetStaticProps = async ({ params, preview = null, p
 
   const nextPost = (await prismic.query([
     Prismic.predicates.at('document.type', 'posts')
-    ],  {
-      after: response.id,
-      orderings : '[document.first_publication_date]' 
-    })).results[0] ?? null;
+  ], {
+    after: response.id,
+    orderings: '[document.first_publication_date]'
+  })).results[0] ?? null;
   const prevPost = (await prismic.query([
     Prismic.predicates.at('document.type', 'posts')
-    ],  {
-      after: response.id,
-      orderings : '[document.first_publication_date desc]' 
-    })).results[0] ?? null;
+  ], {
+    after: response.id,
+    orderings: '[document.first_publication_date desc]'
+  })).results[0] ?? null;
 
   const post: Post = {
     uid: response.uid,
