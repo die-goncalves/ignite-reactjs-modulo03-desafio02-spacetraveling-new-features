@@ -119,11 +119,25 @@
         
                     li {
                         margin: 0.5rem 0;
+                        & + pre {
+                            margin-left: 1.5rem;
+                        }
+                    }
+                    & + pre {
+                        margin-left: 1.5rem;
                     }
                 }
     
                 a {
                     color: var(--highlight);
+                }
+
+                pre {
+                    padding: 1rem;
+                    border-radius: 0.25rem;
+                    overflow-x: auto;
+                    color: var(--body);
+                    background: rgba($color: #8A8A8A, $alpha: 0.1);
                 }
             }
         }
