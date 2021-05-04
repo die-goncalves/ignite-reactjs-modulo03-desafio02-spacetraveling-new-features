@@ -118,6 +118,7 @@ export const getStaticProps: GetStaticProps = async ({ preview = null, previewDa
   ], {
     fetch: ['posts.title', 'posts.subtitle', 'posts.author'],
     pageSize: 1,
+    orderings: '[document.first_publication_date desc]',
     ref: ref ? ref : null
   })
 
